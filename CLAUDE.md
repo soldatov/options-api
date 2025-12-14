@@ -54,6 +54,21 @@ The server starts on `http://localhost:8080`
 go build -o options-api .
 ```
 
+### Docker Build and Deploy
+```bash
+# Show all Docker commands
+make help
+
+# Build Docker image
+make build
+
+# Build and push to Docker Hub
+make push
+
+# Run container locally
+make run
+```
+
 ### Module Management
 ```bash
 go mod tidy          # Clean up dependencies
@@ -62,8 +77,13 @@ go mod download      # Download dependencies
 
 ### Testing the Application
 ```bash
-# Test the web interface manually by accessing http://localhost:8080
-# No automated tests are currently implemented
+# Test locally
+go run main.go
+
+# Test with Docker
+make build && make run
+
+# Access web interface at http://localhost:8080
 ```
 
 ## Configuration File Format
@@ -110,6 +130,8 @@ The application automatically migrates legacy configurations to the new ordered 
 - **MVC architecture**: Clean separation of concerns for maintainability
 - **Template separation**: External HTML templates for easier frontend development
 - **Backward compatibility**: Automatic migration from legacy configuration formats
+- **Docker support**: Multi-stage Docker builds with optimized image size
+- **Containerization**: Ready for deployment with Docker and Kubernetes support
 
 ## Project Structure
 
@@ -117,6 +139,9 @@ The application automatically migrates legacy configurations to the new ordered 
 .
 ├── main.go              # Application entry point and dependency injection
 ├── go.mod              # Go module definition
+├── Dockerfile           # Multi-stage Docker build configuration
+├── Makefile            # Build and deployment automation
+├── .dockerignore       # Files excluded from Docker build
 ├── options.json         # Configuration file with ordered fields (auto-created)
 ├── models/              # Model layer - data structures and business logic
 │   └── config.go        # Config management, ordered fields, and format migration
@@ -126,7 +151,8 @@ The application automatically migrates legacy configurations to the new ordered 
 │   └── index.html       # Main configuration form template
 ├── controllers/         # Controller layer - request handling
 │   └── controller.go    # HTTP handlers and orchestration
-└── CLAUDE.md           # This file
+├── CLAUDE.md           # This file
+└── DOCKER.md           # Docker deployment guide
 ```
 
 ## Development Notes

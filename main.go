@@ -7,13 +7,19 @@ import (
 	"options-api/controllers"
 	"options-api/models"
 	"options-api/views"
+	"os"
 )
 
-var configFile = "options.json"
+func getConfigFile() string {
+	if configFile := os.Getenv("CONFIG_FILE"); configFile != "" {
+		return configFile
+	}
+	return "options.json"
+}
 
 func main() {
 	// Инициализация MVC компонентов
-	configManager := models.NewConfigManager(configFile)
+	configManager := models.NewConfigManager(getConfigFile())
 
 	view, err := views.NewView()
 	if err != nil {

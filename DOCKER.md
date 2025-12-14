@@ -194,26 +194,109 @@ docker run -d --name options-api -p 8081:8080 options-api
 
 ### Using Docker Compose
 
-Create `docker-compose.yml`:
+The project includes a pre-configured `docker-compose.yml` file for easy deployment:
 
 ```yaml
 version: '3.8'
+
 services:
   options-api:
-    image: your-dockerhub-username/options-api:latest
+    build: .
+    container_name: options-api-compose
     ports:
       - "8080:8080"
-    restart: unless-stopped
     volumes:
       - ./options.json:/root/options.json
+      - ./templates:/root/templates
     environment:
       - CONFIG_FILE=/root/options.json
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    networks:
+      - options-api-network
+
+networks:
+  options-api-network:
+    driver: bridge
 ```
 
-Deploy with:
+#### Quick Start with Docker Compose
+
+1. **Ensure Docker daemon is running**
+2. **Navigate to project directory** (where docker-compose.yml is located)
+3. **Start the service**:
 
 ```bash
+docker-compose up --build -d
+```
+
+4. **Access the application** at http://localhost:8080
+5. **Stop the service**:
+
+```bash
+docker-compose down
+```
+
+#### Docker Compose Features
+
+- **Volume Mounting**: The `options.json` file is mounted from the same directory as docker-compose.yml
+- **Template Hot-reloading**: Templates directory is mounted for development
+- **Health Checks**: Automatic health monitoring with curl checks
+- **Auto-restart**: Container restarts automatically if it fails
+- **Network Isolation**: Uses dedicated Docker network
+- **Environment Configuration**: Config file path controlled by `CONFIG_FILE` environment variable
+
+#### Custom Configuration
+
+Place your `options.json` file in the same directory as `docker-compose.yml`:
+
+```bash
+# Create custom configuration
+cat > options.json << 'EOF'
+{
+  "fields": [
+    {"name": "customField1", "value": "defaultValue1"},
+    {"name": "customField2", "value": 42}
+  ]
+}
+EOF
+
+# Start with custom config
+docker-compose up --build -d
+```
+
+#### Development Mode
+
+For development with live template reloading:
+
+```bash
+# Run in development mode
+docker-compose up --build
+
+# View logs
+docker-compose logs -f
+
+# Get shell access
+docker-compose exec options-api /bin/sh
+```
+
+#### Production Deployment
+
+```bash
+# Deploy to production
+docker-compose -f docker-compose.yml up -d
+
+# Update the service
+docker-compose pull
 docker-compose up -d
+
+# Scale the service
+docker-compose up -d --scale options-api=3
 ```
 
 ### Kubernetes
