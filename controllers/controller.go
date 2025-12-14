@@ -1,7 +1,6 @@
 package controllers
 
 import (
-	"encoding/json"
 	"fmt"
 	"net/http"
 	"options-api/models"
@@ -103,22 +102,15 @@ func (c *Controller) HandleFieldValue(w http.ResponseWriter, r *http.Request) er
 	// Ищем поле с таким именем
 	for _, field := range config.Fields {
 		if field.Name == path {
-			// Возвращаем значение поля в формате JSON
-			w.Header().Set("Content-Type", "application/json")
-
-			response := map[string]interface{}{
-				"field": path,
-				"value": field.Value,
-			}
-
-			return json.NewEncoder(w).Encode(response)
+			// Возвращаем значение поля в текстовом формате
+			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+			fmt.Fprint(w, field.Value)
+			return nil
 		}
 	}
 
 	// Если поле не найдено
 	w.WriteHeader(http.StatusNotFound)
-	errorResponse := map[string]string{
-		"error": fmt.Sprintf("Поле '%s' не найдено", path),
-	}
-	return json.NewEncoder(w).Encode(errorResponse)
+	fmt.Fprint(w, fmt.Sprintf("Поле '%s' не найдено", path))
+	return nil
 }
