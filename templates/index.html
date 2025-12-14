@@ -272,13 +272,23 @@
             border-top: 1px solid #eee;
         }
 
-        .apply-button, .cancel-button {
+        .apply-button, .cancel-button, .now-button {
             padding: 8px 16px;
             border: none;
             border-radius: 4px;
             cursor: pointer;
             font-size: 14px;
             font-weight: 500;
+        }
+
+        .now-button {
+            background: #27ae60;
+            color: white;
+            margin-right: auto;
+        }
+
+        .now-button:hover {
+            background: #229954;
         }
 
         .apply-button {
@@ -381,6 +391,7 @@
                 </div>
             </div>
             <div class="datetime-picker-footer">
+                <button type="button" class="now-button" id="now-datetime">Сейчас</button>
                 <button type="button" class="apply-button" id="apply-datetime">Применить</button>
                 <button type="button" class="cancel-button" id="cancel-datetime">Отмена</button>
             </div>
@@ -523,6 +534,30 @@
             hideDatePicker();
         }
 
+        // Установить текущую дату и время
+        function setNowDateTime() {
+            const now = new Date();
+
+            // Форматируем дату в YYYY-MM-DD
+            const year = now.getFullYear();
+            const month = String(now.getMonth() + 1).padStart(2, '0');
+            const day = String(now.getDate()).padStart(2, '0');
+            const dateString = `${year}-${month}-${day}`;
+
+            // Форматируем время в HH:MM:SS
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const timeString = `${hours}:${minutes}:${seconds}`;
+
+            // Устанавливаем значения в поля
+            const dateInput = document.getElementById('picker-date');
+            const timeInput = document.getElementById('picker-time');
+
+            dateInput.value = dateString;
+            timeInput.value = timeString;
+        }
+
         // Обработчики событий для кнопок календаря
         document.addEventListener('DOMContentLoaded', function() {
             initializeCalendars();
@@ -545,6 +580,7 @@
             document.getElementById('picker-overlay').addEventListener('click', hideDatePicker);
             document.getElementById('cancel-datetime').addEventListener('click', hideDatePicker);
             document.getElementById('apply-datetime').addEventListener('click', applyDateTime);
+            document.getElementById('now-datetime').addEventListener('click', setNowDateTime);
 
             // Обработчик для закрытия по ESC
             document.addEventListener('keydown', function(e) {
