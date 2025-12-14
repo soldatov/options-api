@@ -1,6 +1,6 @@
 # Variables
 IMAGE_NAME = options-api
-DOCKERHUB_USERNAME = soldatovanatoly
+DOCKERHUB_USERNAME = soldatovdev
 TAG = latest
 
 # Default target
