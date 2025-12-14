@@ -4,11 +4,9 @@ services:
     container_name: options-api-app
     ports:
       - "8080:8080"
+    restart: unless-stopped
     volumes:
       - ./options.json:/app/options.json
-    environment:
-      - CONFIG_FILE=/app/options.json
-    restart: unless-stopped
     healthcheck:
       test: ["CMD", "wget", "--quiet", "--tries=1", "--output-document=/dev/null", "http://localhost:8080"]
       interval: 30s

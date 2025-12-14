@@ -27,7 +27,7 @@ The application follows MVC (Model-View-Controller) pattern with clear separatio
 
 **Controllers (`controllers/`)**: Request handling and orchestration
 - `Controller` struct coordinating between model and view
-- HTTP request handlers (`HandleHome`, `HandleSave`)
+- HTTP request handlers (`HandleHome`, `HandleSave`, `HandleFieldValue`)
 - Request validation and error handling with proper HTTP status codes
 
 **Main (`main.go`)**: Application entry point
@@ -194,7 +194,7 @@ controller := controllers.NewController(configManager, view)
 The application ensures consistent field ordering through several key architectural decisions:
 
 **Data Structure Design:**
-- Uses `[]ConfigField` instead of `map[string]interface{` to preserve order
+- Uses `[]ConfigField` instead of `map[string]interface{}` to preserve order
 - Each field stores `name` and `value` in a structured array
 - Order is maintained from configuration file through to HTML rendering
 

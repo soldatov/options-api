@@ -22,7 +22,7 @@ FROM alpine:latest
 # Install wget for health check
 RUN apk add --no-cache wget
 
-WORKDIR /app/
+WORKDIR /app
 
 # Copy the Pre-built binary file from the previous stage
 COPY --from=builder /app/main .
