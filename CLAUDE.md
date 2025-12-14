@@ -29,6 +29,7 @@ The application follows MVC (Model-View-Controller) pattern with clear separatio
 - `Controller` struct coordinating between model and view
 - HTTP request handlers (`HandleHome`, `HandleSave`, `HandleFieldValue`)
 - Request validation and error handling with proper HTTP status codes
+- Special Boolean API handling: returns HTTP 203 for `false` values, HTTP 200 for `true` values
 
 **Main (`main.go`)**: Application entry point
 - Dependency injection and component initialization
@@ -132,6 +133,8 @@ The application automatically migrates legacy configurations to the new ordered 
 - **Backward compatibility**: Automatic migration from legacy configuration formats
 - **Docker support**: Multi-stage Docker builds with optimized image size
 - **Containerization**: Ready for deployment with Docker and Kubernetes support
+- **Calendar functionality**: Interactive date/time picker with "Сейчас" button for text fields containing date formats (YYYY-MM-DD HH:MM:SS)
+- **Enhanced API responses**: Special HTTP status codes for Boolean fields (203 for false, 200 for true)
 
 ## Project Structure
 
@@ -188,6 +191,44 @@ controller := controllers.NewController(configManager, view)
 ### Data Flow
 - **Form submission**: `r.Form` → `Controller` → `Model.UpdateConfigFromForm()` → `Model.SaveConfig()`
 - **Page rendering**: `Model.LoadConfig()` → `Model.GetFields()` → `Controller` → `View.RenderHome()`
+
+### API Endpoints
+
+The application provides several REST API endpoints:
+
+**Web Interface:**
+- `GET /` - Main configuration form
+- `POST /save` - Save configuration changes
+
+**Field Value API:**
+- `GET /{fieldName}` - Retrieve individual field values
+  - Returns `text/plain` content type
+  - **Boolean fields**: HTTP 200 for `true`, HTTP 203 for `false`
+  - **Other fields**: HTTP 200 with field value
+  - **Non-existent fields**: HTTP 404 with error message
+
+## Frontend Features
+
+### Calendar Integration
+The application includes an intelligent date/time picker system:
+
+**Automatic Detection:**
+- Scans text fields for date format `YYYY-MM-DD HH:MM:SS`
+- Dynamically shows/hides calendar button (📅) based on content
+- Preserves existing field values and formats
+
+**Interactive Calendar:**
+- Modal dialog with date and time inputs
+- **"Сейчас" button**: Sets current date/time instantly
+- Manual date/time selection with precision to seconds
+- Responsive design with modern styling
+
+**Usage:**
+1. Text field contains date in correct format → calendar button appears
+2. Click calendar button → modal opens with current field values
+3. Use "Сейчас" for instant current time or select manually
+4. Apply updates field with formatted date/time
+5. Form change detection tracks modifications for unsaved changes warnings
 
 ### Field Ordering Architecture
 
