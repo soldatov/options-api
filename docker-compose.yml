@@ -1,14 +1,11 @@
-version: '3.8'
-
 services:
   options-api:
     build: .
-    container_name: options-api-compose
+    container_name: options-api-app
     ports:
       - "8080:8080"
     volumes:
       - ./options.json:/root/options.json
-      - ./templates:/root/templates
     environment:
       - CONFIG_FILE=/root/options.json
     restart: unless-stopped
@@ -18,9 +15,3 @@ services:
       timeout: 10s
       retries: 3
       start_period: 40s
-    networks:
-      - options-api-network
-
-networks:
-  options-api-network:
-    driver: bridge
