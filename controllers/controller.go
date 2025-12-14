@@ -1,10 +1,12 @@
 package controllers
 
 import (
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"options-api/models"
 	"options-api/views"
+	"strings"
 )
 
 type Controller struct {
@@ -75,4 +77,48 @@ func (c *Controller) HandleSave(w http.ResponseWriter, r *http.Request) error {
 
 	http.Redirect(w, r, "/?success=1", http.StatusSeeOther)
 	return nil
+}
+
+// HandleFieldValue - обрабатывает GET запросы для получения значений конкретных полей
+func (c *Controller) HandleFieldValue(w http.ResponseWriter, r *http.Request) error {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+		return fmt.Errorf("method not allowed")
+	}
+
+	// Извлекаем имя поля из URL пути
+	path := strings.Trim(r.URL.Path, "/")
+
+	// Пропускаем корневой путь и статические пути
+	if path == "" || path == "save" || strings.HasPrefix(path, "static/") {
+		return nil
+	}
+
+	config, err := c.configManager.LoadConfig()
+	if err != nil {
+		http.Error(w, "Ошибка чтения конфигурации", http.StatusInternalServerError)
+		return fmt.Errorf("failed to load config: %w", err)
+	}
+
+	// Ищем поле с таким именем
+	for _, field := range config.Fields {
+		if field.Name == path {
+			// Возвращаем значение поля в формате JSON
+			w.Header().Set("Content-Type", "application/json")
+
+			response := map[string]interface{}{
+				"field": path,
+				"value": field.Value,
+			}
+
+			return json.NewEncoder(w).Encode(response)
+		}
+	}
+
+	// Если поле не найдено
+	w.WriteHeader(http.StatusNotFound)
+	errorResponse := map[string]string{
+		"error": fmt.Sprintf("Поле '%s' не найдено", path),
+	}
+	return json.NewEncoder(w).Encode(errorResponse)
 }

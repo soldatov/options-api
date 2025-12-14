@@ -36,17 +36,24 @@ func main() {
 	// Статические файлы (если потребуются)
 	http.Handle("/static/", http.StripPrefix("/static/", http.FileServer(http.Dir("static"))))
 
-	// Главная страница с формой
+	// Универсальный обработчик для всех запросов
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if err := controller.HandleHome(w, r); err != nil {
-			log.Printf("Error handling home request: %v", err)
-		}
-	})
-
-	// Обработчик сохранения
-	http.HandleFunc("/save", func(w http.ResponseWriter, r *http.Request) {
-		if err := controller.HandleSave(w, r); err != nil {
-			log.Printf("Error handling save request: %v", err)
+		switch r.URL.Path {
+		case "/":
+			// Главная страница
+			if err := controller.HandleHome(w, r); err != nil {
+				log.Printf("Error handling home request: %v", err)
+			}
+		case "/save":
+			// Обработчик сохранения
+			if err := controller.HandleSave(w, r); err != nil {
+				log.Printf("Error handling save request: %v", err)
+			}
+		default:
+			// Динамические эндпоинты для полей
+			if err := controller.HandleFieldValue(w, r); err != nil {
+				log.Printf("Error handling field value request: %v", err)
+			}
 		}
 	})
 
