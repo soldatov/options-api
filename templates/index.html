@@ -144,6 +144,160 @@
             font-size: 14px;
             color: #555;
         }
+
+        .text-input-container {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+        }
+
+        .text-input-container input[type="text"] {
+            flex: 1;
+        }
+
+        .calendar-button {
+            background: #3498db;
+            color: white;
+            border: none;
+            padding: 12px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            transition: background-color 0.3s;
+            min-width: 44px;
+            height: 44px;
+            display: none; /* Скрыть по умолчанию */
+        }
+
+        .calendar-button:hover {
+            background: #2980b9;
+        }
+
+        .calendar-button:active {
+            transform: translateY(1px);
+        }
+
+        .datetime-picker {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 1000;
+        }
+
+        .datetime-picker-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+        .datetime-picker-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            z-index: 1001;
+            min-width: 320px;
+            max-width: 400px;
+        }
+
+        .datetime-picker-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid #eee;
+        }
+
+        .datetime-picker-header h3 {
+            margin: 0;
+            color: #2c3e50;
+        }
+
+        .close-button {
+            background: none;
+            border: none;
+            font-size: 24px;
+            cursor: pointer;
+            color: #7f8c8d;
+            padding: 0;
+            width: 30px;
+            height: 30px;
+        }
+
+        .close-button:hover {
+            color: #2c3e50;
+        }
+
+        .datetime-picker-body {
+            padding: 20px;
+        }
+
+        .date-section, .time-section {
+            margin-bottom: 15px;
+        }
+
+        .date-section label, .time-section label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: 600;
+            color: #2c3e50;
+        }
+
+        .picker-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #ddd;
+            border-radius: 4px;
+            font-size: 14px;
+        }
+
+        .picker-input:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .datetime-picker-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            padding: 20px;
+            border-top: 1px solid #eee;
+        }
+
+        .apply-button, .cancel-button {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .apply-button {
+            background: #3498db;
+            color: white;
+        }
+
+        .apply-button:hover {
+            background: #2980b9;
+        }
+
+        .cancel-button {
+            background: #ecf0f1;
+            color: #7f8c8d;
+        }
+
+        .cancel-button:hover {
+            background: #bdc3c7;
+        }
     </style>
 </head>
 <body>
@@ -165,11 +319,17 @@
                 </label>
 
                 {{if eq .Type "text"}}
-                    <input type="text"
-                           id="{{.Name}}"
-                           name="{{.Name}}"
-                           value="{{.Value}}"
-                           placeholder="Введите текст">
+                    <div class="text-input-container">
+                        <input type="text"
+                               id="{{.Name}}"
+                               name="{{.Name}}"
+                               value="{{.Value}}"
+                               placeholder="Введите текст"
+                               data-field-name="{{.Name}}">
+                        <button type="button" class="calendar-button" id="calendar-{{.Name}}" title="Выбрать дату и время">
+                            📅
+                        </button>
+                    </div>
 
                 {{else if eq .Type "number"}}
                     <input type="number"
@@ -203,6 +363,31 @@
         </form>
     </div>
 
+    <!-- Календарь для выбора даты и времени -->
+    <div id="datetime-picker" class="datetime-picker" style="display: none;">
+        <div class="datetime-picker-content">
+            <div class="datetime-picker-header">
+                <h3>Выберите дату и время</h3>
+                <button type="button" class="close-button" id="close-picker">&times;</button>
+            </div>
+            <div class="datetime-picker-body">
+                <div class="date-section">
+                    <label for="picker-date">Дата:</label>
+                    <input type="date" id="picker-date" class="picker-input">
+                </div>
+                <div class="time-section">
+                    <label for="picker-time">Время:</label>
+                    <input type="time" id="picker-time" class="picker-input" step="1">
+                </div>
+            </div>
+            <div class="datetime-picker-footer">
+                <button type="button" class="apply-button" id="apply-datetime">Применить</button>
+                <button type="button" class="cancel-button" id="cancel-datetime">Отмена</button>
+            </div>
+        </div>
+        <div class="datetime-picker-overlay" id="picker-overlay"></div>
+    </div>
+
     <script>
         document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
             checkbox.addEventListener('change', function() {
@@ -233,6 +418,155 @@
 
         form.addEventListener('submit', () => {
             formChanged = false;
+        });
+
+        // Функциональность календаря для полей с датой
+        let currentField = null;
+
+        // Функция проверки даты в формате YYYY-MM-DD HH:MM:SS
+        function isDateFormat(value) {
+            const dateRegex = /^\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2}$/;
+            return dateRegex.test(value);
+        }
+
+        // Функция проверки корректности даты
+        function isValidDate(dateString) {
+            const date = new Date(dateString);
+            return !isNaN(date.getTime());
+        }
+
+        // Функция форматирования даты и времени
+        function formatDateTime(date, time) {
+            if (!date) return '';
+            const timePart = time || '00:00:00';
+            return `${date} ${timePart}`;
+        }
+
+        // Функция парсинга даты и времени
+        function parseDateTime(dateTimeString) {
+            if (!dateTimeString) return { date: '', time: '' };
+
+            const match = dateTimeString.match(/^(\d{4}-\d{2}-\d{2}) (\d{2}:\d{2}:\d{2})$/);
+            if (match) {
+                return {
+                    date: match[1],
+                    time: match[2]
+                };
+            }
+            return { date: '', time: '' };
+        }
+
+        // Инициализация календарей для текстовых полей
+        function initializeCalendars() {
+            const textInputs = document.querySelectorAll('input[type="text"]');
+
+            textInputs.forEach(input => {
+                // Проверяем, является ли значение полем даты
+                if (isDateFormat(input.value) && isValidDate(input.value)) {
+                    const container = input.closest('.text-input-container');
+                    const calendarButton = container.querySelector('.calendar-button');
+                    if (calendarButton) {
+                        calendarButton.style.display = 'block';
+                    }
+                }
+            });
+        }
+
+        // Показать календарь
+        function showDatePicker(input) {
+            currentField = input;
+            const picker = document.getElementById('datetime-picker');
+            const dateInput = document.getElementById('picker-date');
+            const timeInput = document.getElementById('picker-time');
+
+            // Парсим текущее значение
+            const currentDateTime = input.value;
+            const { date, time } = parseDateTime(currentDateTime);
+
+            // Устанавливаем значения в поля выбора
+            dateInput.value = date;
+            timeInput.value = time;
+
+            // Показываем календарь
+            picker.style.display = 'block';
+        }
+
+        // Скрыть календарь
+        function hideDatePicker() {
+            const picker = document.getElementById('datetime-picker');
+            picker.style.display = 'none';
+            currentField = null;
+        }
+
+        // Применить выбранную дату и время
+        function applyDateTime() {
+            if (!currentField) return;
+
+            const dateInput = document.getElementById('picker-date');
+            const timeInput = document.getElementById('picker-time');
+
+            if (dateInput.value) {
+                const formattedDateTime = formatDateTime(dateInput.value, timeInput.value);
+                currentField.value = formattedDateTime;
+
+                // Помечаем форму как измененную
+                formChanged = true;
+
+                // Показываем кнопку календаря, если она была скрыта
+                const container = currentField.closest('.text-input-container');
+                const calendarButton = container.querySelector('.calendar-button');
+                if (calendarButton) {
+                    calendarButton.style.display = 'block';
+                }
+            }
+
+            hideDatePicker();
+        }
+
+        // Обработчики событий для кнопок календаря
+        document.addEventListener('DOMContentLoaded', function() {
+            initializeCalendars();
+
+            // Назначаем обработчики для кнопок календаря
+            const calendarButtons = document.querySelectorAll('.calendar-button');
+            calendarButtons.forEach(button => {
+                button.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    const fieldName = this.id.replace('calendar-', '');
+                    const input = document.getElementById(fieldName);
+                    if (input) {
+                        showDatePicker(input);
+                    }
+                });
+            });
+
+            // Обработчики для управления календарем
+            document.getElementById('close-picker').addEventListener('click', hideDatePicker);
+            document.getElementById('picker-overlay').addEventListener('click', hideDatePicker);
+            document.getElementById('cancel-datetime').addEventListener('click', hideDatePicker);
+            document.getElementById('apply-datetime').addEventListener('click', applyDateTime);
+
+            // Обработчик для закрытия по ESC
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    hideDatePicker();
+                }
+            });
+
+            // Отслеживаем изменения в текстовых полях для динамического показа/скрытия кнопок календаря
+            const textInputs = document.querySelectorAll('input[type="text"]');
+            textInputs.forEach(input => {
+                input.addEventListener('input', function() {
+                    const container = this.closest('.text-input-container');
+                    const calendarButton = container.querySelector('.calendar-button');
+
+                    if (isDateFormat(this.value) && isValidDate(this.value)) {
+                        calendarButton.style.display = 'block';
+                    } else {
+                        calendarButton.style.display = 'none';
+                    }
+                });
+            });
         });
     </script>
 </body>
