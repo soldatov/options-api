@@ -1,0 +1,16 @@
+{
+  "fields": [
+    {
+      "name": "fieldText",
+      "value": "Текстовое значение"
+    },
+    {
+      "name": "intData",
+      "value": 100500
+    },
+    {
+      "name": "boolValue",
+      "value": true
+    }
+  ]
+}
