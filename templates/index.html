@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Настройки</title>
+    <style>
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            background-color: #f5f5f5;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 30px;
+        }
+
+        h1 {
+            color: #2c3e50;
+            margin-bottom: 30px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #eee;
+        }
+
+        .form-group {
+            margin-bottom: 25px;
+            padding: 20px;
+            background: #f8f9fa;
+            border-radius: 6px;
+            border-left: 4px solid #3498db;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 16px;
+        }
+
+        input[type="text"],
+        input[type="number"] {
+            width: 100%;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 6px;
+            font-size: 16px;
+            transition: border-color 0.3s;
+        }
+
+        input[type="text"]:focus,
+        input[type="number"]:focus {
+            outline: none;
+            border-color: #3498db;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        input[type="checkbox"] {
+            width: 20px;
+            height: 20px;
+            cursor: pointer;
+        }
+
+        .checkbox-label {
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+
+        .save-button {
+            background: linear-gradient(135deg, #3498db, #2980b9);
+            color: white;
+            border: none;
+            padding: 15px 40px;
+            font-size: 18px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            display: block;
+            margin: 40px auto 0;
+            width: 200px;
+            text-align: center;
+        }
+
+        .save-button:hover {
+            background: linear-gradient(135deg, #2980b9, #3498db);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 15px rgba(52, 152, 219, 0.3);
+        }
+
+        .save-button:active {
+            transform: translateY(0);
+        }
+
+        .field-type {
+            display: inline-block;
+            font-size: 12px;
+            color: #7f8c8d;
+            background: #ecf0f1;
+            padding: 2px 8px;
+            border-radius: 10px;
+            margin-left: 10px;
+        }
+
+        .success-message {
+            background: #2ecc71;
+            color: white;
+            padding: 15px;
+            border-radius: 6px;
+            margin-bottom: 20px;
+            text-align: center;
+            animation: fadeIn 0.5s;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .value-display {
+            font-family: monospace;
+            background: #f1f1f1;
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-top: 5px;
+            font-size: 14px;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Настройки системы</h1>
+
+        {{if .Success}}
+        <div class="success-message">
+            Настройки успешно сохранены!
+        </div>
+        {{end}}
+
+        <form method="POST" action="/save" id="settingsForm">
+            {{range .Fields}}
+            <div class="form-group">
+                <label for="{{.Name}}">
+                    {{.Name}}
+                    <span class="field-type">{{.Type}}</span>
+                </label>
+
+                {{if eq .Type "text"}}
+                    <input type="text"
+                           id="{{.Name}}"
+                           name="{{.Name}}"
+                           value="{{.Value}}"
+                           placeholder="Введите текст">
+
+                {{else if eq .Type "number"}}
+                    <input type="number"
+                           id="{{.Name}}"
+                           name="{{.Name}}"
+                           value="{{.Value}}"
+                           step="any"
+                           placeholder="Введите число">
+
+                {{else if eq .Type "checkbox"}}
+                    <div class="checkbox-group">
+                        <input type="checkbox"
+                               id="{{.Name}}"
+                               name="{{.Name}}"
+                               {{if .Value}}checked{{end}}>
+                        <label for="{{.Name}}" class="checkbox-label">
+                            {{if .Value}}Включено{{else}}Выключено{{end}}
+                        </label>
+                    </div>
+                {{else}}
+                    <div class="value-display">
+                        {{.Value}}
+                    </div>
+                {{end}}
+            </div>
+            {{end}}
+
+            <button type="submit" class="save-button">
+                💾 Сохранить
+            </button>
+        </form>
+    </div>
+
+    <script>
+        document.querySelectorAll('input[type="checkbox"]').forEach(checkbox => {
+            checkbox.addEventListener('change', function() {
+                const label = this.nextElementSibling;
+                label.textContent = this.checked ? 'Включено' : 'Выключено';
+            });
+        });
+
+        let formChanged = false;
+        const form = document.getElementById('settingsForm');
+        const inputs = form.querySelectorAll('input');
+
+        inputs.forEach(input => {
+            input.addEventListener('input', () => {
+                formChanged = true;
+            });
+            input.addEventListener('change', () => {
+                formChanged = true;
+            });
+        });
+
+        window.addEventListener('beforeunload', (e) => {
+            if (formChanged) {
+                e.preventDefault();
+                e.returnValue = '';
+            }
+        });
+
+        form.addEventListener('submit', () => {
+            formChanged = false;
+        });
+    </script>
+</body>
+</html>
