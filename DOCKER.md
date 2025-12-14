@@ -120,7 +120,7 @@ The application can be configured using environment variables:
 ```bash
 docker run -d --name options-api \
   -p 8080:8080 \
-  -e CONFIG_FILE=/root/options.json \
+  -e CONFIG_FILE=/app/options.json \
   options-api
 ```
 
@@ -131,8 +131,8 @@ For development or persistent configuration:
 ```bash
 docker run -d --name options-api \
   -p 8080:8080 \
-  -v $(pwd)/templates:/root/templates \
-  -v $(pwd)/options.json:/root/options.json \
+  -v $(pwd)/templates:/app/templates \
+  -v $(pwd)/options.json:/app/options.json \
   options-api
 ```
 
@@ -206,10 +206,10 @@ services:
     ports:
       - "8080:8080"
     volumes:
-      - ./options.json:/root/options.json
-      - ./templates:/root/templates
+      - ./options.json:/app/options.json
+      - ./templates:/app/templates
     environment:
-      - CONFIG_FILE=/root/options.json
+      - CONFIG_FILE=/app/options.json
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8080"]

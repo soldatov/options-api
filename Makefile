@@ -86,7 +86,7 @@ login:
 .PHONY: dev-run
 dev-run:
 	@echo "Running container with volume mount for development..."
-	docker run -d --name $(IMAGE_NAME)-dev -p 8080:8080 -v $(PWD)/templates:/root/templates $(IMAGE_NAME):$(TAG)
+	docker run -d --name $(IMAGE_NAME)-dev -p 8080:8080 -v $(PWD)/templates:/app/templates $(IMAGE_NAME):$(TAG)
 	@echo "Dev container is running at http://localhost:8080"
 
 # View logs

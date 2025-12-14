@@ -22,13 +22,15 @@ FROM alpine:latest
 # Install wget for health check
 RUN apk add --no-cache wget
 
-WORKDIR /root/
+WORKDIR /app/
 
 # Copy the Pre-built binary file from the previous stage
 COPY --from=builder /app/main .
 
 # Copy templates directory
 COPY --from=builder /app/templates ./templates
+
+COPY --from=builder /app/options.json ./options.json
 
 # Expose port 8080 to the outside world
 EXPOSE 8080
