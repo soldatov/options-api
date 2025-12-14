@@ -104,6 +104,18 @@ func (c *Controller) HandleFieldValue(w http.ResponseWriter, r *http.Request) er
 		if field.Name == path {
 			// Возвращаем значение поля в текстовом формате
 			w.Header().Set("Content-Type", "text/plain; charset=utf-8")
+
+			// Особая логика для Boolean полей
+			if boolValue, isBool := field.Value.(bool); isBool {
+				if !boolValue {
+					// Для false возвращаем HTTP 203 Non-Authoritative Information
+					w.WriteHeader(http.StatusNonAuthoritativeInfo)
+				} else {
+					// Для true возвращаем HTTP 200 OK
+					w.WriteHeader(http.StatusOK)
+				}
+			}
+
 			fmt.Fprint(w, field.Value)
 			return nil
 		}

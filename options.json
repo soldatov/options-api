@@ -13,6 +13,10 @@
       "value": true
     },
     {
+      "name": "isDisabled",
+      "value": false
+    },
+    {
       "name": "eventDate",
       "value": "2025-12-25 15:30:00"
     }
