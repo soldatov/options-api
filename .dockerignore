@@ -1,0 +1,46 @@
+# Git
+.git
+.gitignore
+
+# Documentation
+README.md
+CLAUDE.md
+
+# Docker
+Dockerfile
+.dockerignore
+
+# CI/CD
+.github/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Temporary files
+*.tmp
+*.temp
+
+# Backup files
+*.backup
+
+# Test files
+*_test.go
+main_alt.go
+main_alt2.go
+main_test_order.go
+
+# Built binaries
+options-api
+
+# Claude files
+.claude/
