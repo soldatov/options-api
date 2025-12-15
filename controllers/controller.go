@@ -6,6 +6,7 @@ import (
 	"options-api/models"
 	"options-api/views"
 	"strings"
+	"time"
 )
 
 type Controller struct {
@@ -114,6 +115,24 @@ func (c *Controller) HandleFieldValue(w http.ResponseWriter, r *http.Request) er
 					// Для true возвращаем HTTP 200 OK
 					w.WriteHeader(http.StatusOK)
 				}
+			} else if strValue, isString := field.Value.(string); isString {
+				// Проверяем, является ли строка датой в формате YYYY-MM-DD HH:MM:SS
+				if fieldValue, err := time.Parse("2006-01-02 15:04:05", strValue); err == nil {
+					// Сравниваем с текущим временем
+					if fieldValue.Before(time.Now()) {
+						// Если дата в прошлом, возвращаем HTTP 203
+						w.WriteHeader(http.StatusNonAuthoritativeInfo)
+					} else {
+						// Если дата в будущем или сейчас, возвращаем HTTP 200
+						w.WriteHeader(http.StatusOK)
+					}
+				} else {
+					// Для остальных строковых полей возвращаем HTTP 200
+					w.WriteHeader(http.StatusOK)
+				}
+			} else {
+				// Для всех остальных типов данных возвращаем HTTP 200
+				w.WriteHeader(http.StatusOK)
 			}
 
 			fmt.Fprint(w, field.Value)
