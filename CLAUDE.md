@@ -68,6 +68,13 @@ make push
 
 # Run container locally
 make run
+
+# Development commands
+make dev-run          # Run with volume mount for development
+make logs             # View container logs
+make shell            # Get interactive shell in container
+make stop             # Stop and remove container
+make clean            # Clean up images and containers
 ```
 
 ### Module Management
@@ -84,8 +91,43 @@ go run main.go
 # Test with Docker
 make build && make run
 
+# Test with Docker Compose
+docker-compose up --build -d
+
 # Access web interface at http://localhost:8080
 ```
+
+## Environment Variables
+
+The application supports the following environment variables:
+
+- **`CONFIG_FILE`**: Path to the configuration file (default: `options.json`)
+- **Usage**:
+  ```bash
+  CONFIG_FILE=/custom/path/config.json go run main.go
+  ```
+
+## Docker Compose Support
+
+For easier local development and deployment, the project includes a `docker-compose.yml` file:
+
+### Quick Start with Docker Compose
+```bash
+# Build and run all services
+docker-compose up --build -d
+
+# View logs
+docker-compose logs -f
+
+# Stop and remove containers
+docker-compose down
+```
+
+### Docker Compose Features
+- **Volume Mounting**: Persistent configuration hot-reloading
+- **Health Checks**: Automatic health monitoring with wget-based checks
+- **Auto-restart**: Container restarts on failure (`unless-stopped`)
+- **Production Ready**: Optimized for deployment with proper health checks
 
 ## Configuration File Format
 
@@ -97,7 +139,9 @@ The `options.json` file uses an ordered array structure to maintain consistent f
   "fields": [
     {"name": "fieldText", "value": "Текстовое значение"},
     {"name": "intData", "value": 100500},
-    {"name": "boolValue", "value": true}
+    {"name": "boolValue", "value": true},
+    {"name": "isDisabled", "value": false},
+    {"name": "eventDate", "value": "2025-12-25 15:30:00"}
   ]
 }
 ```
@@ -111,12 +155,13 @@ The `options.json` file uses an ordered array structure to maintain consistent f
 }
 ```
 
-The application automatically migrates legacy configurations to the new ordered format while preserving field order using predefined sequence: `fieldText`, `intData`, `boolValue`.
+The application automatically migrates legacy configurations to the new ordered format while preserving field order using predefined sequence: `fieldText`, `intData`, `boolValue`, with additional fields appended in their original order.
 
 ### Supported Field Types
-- **Text fields**: Rendered as HTML text inputs
+- **Text fields**: Rendered as HTML text inputs, support date format detection for calendar integration
+- **Dates**: Special processing for `YYYY-MM-DD HH:MM:SS` format with API status code differentiation
 - **Numbers**: Rendered as HTML number inputs (supports int, int64, float64)
-- **Booleans**: Rendered as HTML checkboxes
+- **Booleans**: Rendered as HTML checkboxes with special API status codes
 - **Complex types**: Displayed as read-only values
 
 ## Key Features
@@ -134,7 +179,7 @@ The application automatically migrates legacy configurations to the new ordered 
 - **Docker support**: Multi-stage Docker builds with optimized image size
 - **Containerization**: Ready for deployment with Docker and Kubernetes support
 - **Calendar functionality**: Interactive date/time picker with "Сейчас" button for text fields containing date formats (YYYY-MM-DD HH:MM:SS)
-- **Enhanced API responses**: Special HTTP status codes for Boolean fields (203 for false, 200 for true)
+- **Enhanced API responses**: Special HTTP status codes for Boolean fields (203 for false, 200 for true) and date fields (203 for past dates, 200 for future/present dates)
 
 ## Project Structure
 
@@ -204,8 +249,15 @@ The application provides several REST API endpoints:
 - `GET /{fieldName}` - Retrieve individual field values
   - Returns `text/plain` content type
   - **Boolean fields**: HTTP 200 for `true`, HTTP 203 for `false`
+  - **Date fields**: HTTP 200 for future/present dates, HTTP 203 for past dates (format: `YYYY-MM-DD HH:MM:SS`)
   - **Other fields**: HTTP 200 with field value
   - **Non-existent fields**: HTTP 404 with error message
+
+**Enhanced Date/Time Processing:**
+- Date fields in format `YYYY-MM-DD HH:MM:SS` receive special status code handling
+- **Past dates**: Return HTTP 203 Non-Authoritative Information
+- **Future/Present dates**: Return HTTP 200 OK
+- This provides semantic meaning about date expiration status
 
 ## Frontend Features
 
@@ -242,7 +294,7 @@ The application ensures consistent field ordering through several key architectu
 **Migration Strategy:**
 - Legacy configurations are automatically converted to ordered format
 - Predefined field order sequence: `fieldText`, `intData`, `boolValue`
-- Additional fields are appended in the order they appear in the original file
+- Additional fields (`isDisabled`, `eventDate`, etc.) are appended in the order they appear in the original file
 
 **Template Integration:**
 - External HTML templates loaded via `template.ParseFiles()`
