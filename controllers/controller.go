@@ -117,14 +117,27 @@ func (c *Controller) HandleFieldValue(w http.ResponseWriter, r *http.Request) er
 				}
 			} else if strValue, isString := field.Value.(string); isString {
 				// Проверяем, является ли строка датой в формате YYYY-MM-DD HH:MM:SS
+				// Сначала пробуем распарсить как обычную дату для проверки формата
 				if fieldValue, err := time.Parse("2006-01-02 15:04:05", strValue); err == nil {
-					// Сравниваем с текущим временем
-					if fieldValue.Before(time.Now()) {
-						// Если дата в прошлом, возвращаем HTTP 203
-						w.WriteHeader(http.StatusNonAuthoritativeInfo)
-					} else {
-						// Если дата в будущем или сейчас, возвращаем HTTP 200
-						w.WriteHeader(http.StatusOK)
+					// Загружаем часовой пояс Саратова (+04)
+					saratovLocation, err := time.LoadLocation("Europe/Saratov")
+					if err != nil {
+						// Если не удалось загрузить часовой пояс, используем ручную настройку +4 часа
+						saratovLocation = time.FixedZone("Saratov", 4*60*60)
+					}
+					// Перепарсиваем дату с учетом часового пояса Саратова
+					fieldValue, err = time.ParseInLocation("2006-01-02 15:04:05", strValue, saratovLocation)
+					if err == nil {
+						// Получаем текущее время в часовом поясе Саратова
+						nowInSaratov := time.Now().In(saratovLocation)
+						// Сравниваем с текущим временем в часовом поясе Саратова
+						if fieldValue.Before(nowInSaratov) {
+							// Если дата в прошлом, возвращаем HTTP 203
+							w.WriteHeader(http.StatusNonAuthoritativeInfo)
+						} else {
+							// Если дата в будущем или сейчас, возвращаем HTTP 200
+							w.WriteHeader(http.StatusOK)
+						}
 					}
 				} else {
 					// Для остальных строковых полей возвращаем HTTP 200
